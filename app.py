@@ -6,6 +6,8 @@ from notion_api import get_dataframe
 
 st.title("Notion 데이터 깃허브 잔디 스타일 시각화")
 
+st.write("Hello, world!")
+
 # Notion 데이터를 DataFrame 형태로 가져옵니다.
 df = get_dataframe()
 
