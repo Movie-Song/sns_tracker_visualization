@@ -81,7 +81,3 @@ def get_dataframe():
     print("📌 `get_dataframe()`이 반환하는 타입:", type(df))
 
     return df.set_index("Date").sort_index()
-
-
-    df["Date"] = pd.to_datetime(df["Date"])
-    return df.set_index("Date").sort_index()
