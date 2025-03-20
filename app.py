@@ -1,45 +1,66 @@
 import streamlit as st
 import pandas as pd
-import matplotlib.pyplot as plt
 import numpy as np
-from notion_api import get_dataframe
+import matplotlib.pyplot as plt
+from datetime import datetime, timedelta
 
-st.title("Notion 데이터 깃허브 잔디 스타일 시각화")
-st.write("Hello, world!")
+from notion_api import get_dataframe  # 기존의 get_dataframe() 사용
 
-# Notion 데이터를 DataFrame 형태로 가져옵니다.
-df = get_dataframe()
+st.title("지난 365일 깃허브 잔디 스타일 시각화")
 
-# 데이터가 없으면 에러 메시지를 출력하고 앱 실행을 중단합니다.
-if df.empty:
-    st.error("데이터가 없습니다. Notion API 설정과 DATABASE_ID를 확인해 주세요.")
+# 1) Notion에서 데이터 가져오기 (df_user)
+#    df_user는 날짜(Date)를 인덱스로 하고, "Count" 컬럼이 있는 형태로 가정
+df_user = get_dataframe()
+
+# 데이터가 없으면 중단
+if df_user.empty:
+    st.error("데이터가 없습니다. Notion API 설정 또는 DATABASE_ID를 확인해 주세요.")
     st.stop()
 
-# 가져온 데이터 확인
-st.subheader("가져온 데이터")
-st.write(df)
+# 2) 365일 범위 날짜 생성
+end_date = pd.to_datetime("today").normalize()   # 오늘 날짜(시분초=00:00:00)
+start_date = end_date - pd.Timedelta(days=364)   # 365일 전 (오늘 포함)
 
-# 날짜별 데이터를 주차와 요일로 분리합니다.
-df["Weekday"] = df.index.weekday         # 0: 월요일, 6: 일요일
-df["Week"] = df.index.isocalendar().week  # ISO 주 번호
+date_range = pd.date_range(start=start_date, end=end_date, freq="D")
 
-# 피벗 테이블 생성 (주차를 열, 요일을 행으로)
-pivot = df.pivot_table(values="Count", index="Weekday", columns="Week", fill_value=0)
+# 3) 날짜 범위 전체를 담는 달력용 DataFrame 생성 (기본 Count=0)
+df_calendar = pd.DataFrame(index=date_range)
+df_calendar["Date"] = df_calendar.index
+df_calendar["Count"] = 0
+
+# 4) 실제 데이터(df_user)로 Count 값 채우기
+#    df_user.index가 2024-08-16 같은 datetime 형식이라고 가정
+for date_i, row in df_user.iterrows():
+    if date_i in df_calendar.index:
+        df_calendar.loc[date_i, "Count"] = row["Count"]
+
+# 5) 요일(Weekday)와 주(WeekIndex) 계산
+#    weekday(): 0=월, 6=일
+df_calendar["Weekday"] = df_calendar.index.weekday
+df_calendar["WeekIndex"] = ((df_calendar.index - start_date).days // 7).astype(int)
+
+# 6) 피벗 테이블 (행=요일, 열=주차)
+pivot = df_calendar.pivot(index="Weekday", columns="WeekIndex", values="Count")
+
 st.subheader("피벗 테이블")
 st.write(pivot)
 
-# 히트맵 생성 (시각화를 위해 Figure 크기를 조정)
-fig, ax = plt.subplots(figsize=(16, 6))
-heatmap = ax.pcolormesh(pivot, cmap="Greens", edgecolors="gray")
+# 7) 히트맵 시각화
+fig, ax = plt.subplots(figsize=(16, 3))
+
+heatmap = ax.pcolormesh(pivot, cmap="Greens", edgecolors="white")
 plt.colorbar(heatmap, ax=ax)
 
-# 축 레이블 설정
-ax.set_xticks(np.arange(len(pivot.columns)) + 0.5)
+# X축: 주차
+ax.set_xticks(np.arange(pivot.shape[1]) + 0.5)
 ax.set_xticklabels(pivot.columns, rotation=90)
+
+# Y축: 요일 (0=월, 6=일)
 ax.set_yticks(np.arange(7) + 0.5)
 ax.set_yticklabels(["월", "화", "수", "목", "금", "토", "일"])
-ax.set_xlabel("주차")
+
+ax.set_xlabel("WeekIndex (0 = 365일 전 주)")
 ax.set_ylabel("요일")
-ax.set_title("Notion 데이터 Contributions Heatmap")
+ax.set_title("지난 365일 Contributions Heatmap")
 
 st.pyplot(fig)
