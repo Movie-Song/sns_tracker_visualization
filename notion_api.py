@@ -34,7 +34,12 @@ def get_notion_data():
     }
 
     response = requests.post(url, headers=headers, json=payload)
-    return response.json()
+    data = response.json()
+
+    # ✅ API 응답 확인
+    print("📌 Notion API 응답:", data)
+
+    return data
 
 def extract_dates(data):
     """ 날짜별 카운트 집계 """
