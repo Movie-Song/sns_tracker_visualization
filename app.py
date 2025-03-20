@@ -4,58 +4,52 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
 from datetime import datetime, timedelta
+from notion_api import get_dataframe
 
-from notion_api import get_dataframe  # 기존 get_dataframe() 그대로 사용
-
-# 1) Notion에서 데이터 가져오기
+# Notion API에서 데이터 가져오기
 df_user = get_dataframe()
 
-# 데이터가 없으면 앱 종료
 if df_user.empty:
+    st.error("데이터가 없습니다. Notion API 설정과 DATABASE_ID를 확인해 주세요.")
     st.stop()
 
-# 2) 지난 365일 날짜 범위 생성
-end_date = pd.to_datetime("today").normalize()   # 오늘 (날짜만)
-start_date = end_date - pd.Timedelta(days=364)   # 364일 전 → 총 365일
-
+# 오늘 기준 지난 365일 날짜 범위 생성 (오늘 포함)
+end_date = pd.to_datetime("today").normalize()
+start_date = end_date - pd.Timedelta(days=364)
 date_range = pd.date_range(start=start_date, end=end_date, freq="D")
 
-# 3) 달력용 DataFrame (기본 Count=0)
+# 달력용 DataFrame 생성 (기본 Count = 0)
 df_calendar = pd.DataFrame(index=date_range)
 df_calendar["Count"] = 0
 
-# 4) 실제 사용자 데이터(df_user)로부터 Count 대입
+# Notion 데이터(df_user)의 Count를 달력 DataFrame에 반영 (날짜가 일치하는 경우)
 for date_i, row in df_user.iterrows():
     if date_i in df_calendar.index:
         df_calendar.loc[date_i, "Count"] = row["Count"]
 
-# 5) 요일(Weekday), 주차(WeekIndex) 계산
-df_calendar["Weekday"] = df_calendar.index.weekday           # 0=월, 6=일
+# 요일(Weekday)와 주(WeekIndex) 계산
+df_calendar["Weekday"] = df_calendar.index.weekday  # 0: 월요일, 6: 일요일
 df_calendar["WeekIndex"] = ((df_calendar.index - start_date).days // 7).astype(int)
 
-# 6) 피벗 테이블: (행=요일, 열=주차)
+# 피벗 테이블 생성 (행=요일, 열=주차, 값=Count)
 pivot = df_calendar.pivot(index="Weekday", columns="WeekIndex", values="Count")
+# Count 값이 5보다 크면 5로 클리핑
+pivot = pivot.clip(upper=5)
 
-# 7) 색상 단계 설정 (0~5 구간)
-#   - ListedColormap + BoundaryNorm 이용 → 6단계(0=흰색, 5=가장 진한 색)
-colors = ["white", "#e6ffe6", "#b3ffb3", "#80ff80", "#4dff4d", "#00cc00"]
+# 사용자 지정 색상 설정 (0부터 5까지)
+colors = ["white", "#FCFEB3", "#C6EA74", "#68CB57", "#00893E", "#006B31"]
 cmap = mcolors.ListedColormap(colors)
-boundaries = [0, 1, 2, 3, 4, 5, 999]  # 마지막 구간(5 이상)은 전부 최대치 색상
-
+# 경계값: 0, 1, 2, 3, 4, 5, 6 (즉, 0~0.999는 white, 1~1.999는 #FCFEB3, ...)
+boundaries = [0, 1, 2, 3, 4, 5, 6]
 norm = mcolors.BoundaryNorm(boundaries, ncolors=cmap.N)
 
-# 8) 히트맵 그리기
+# 히트맵 그리기 (필요한 요소만 남김)
 fig, ax = plt.subplots(figsize=(16, 3))
-heatmap = ax.pcolormesh(pivot, cmap=cmap, norm=norm, edgecolors="white")
-plt.colorbar(heatmap, ax=ax)
+ax.pcolormesh(pivot, cmap=cmap, norm=norm, edgecolors="white")
 
-# 축 설정
-ax.set_xticks(np.arange(pivot.shape[1]) + 0.5)
-ax.set_xticklabels(pivot.columns, rotation=90)
-ax.set_yticks(np.arange(7) + 0.5)
-ax.set_yticklabels(["월", "화", "수", "목", "금", "토", "일"])
+# 축, 눈금, 범례, 제목 제거
+ax.set_xticks([])
+ax.set_yticks([])
+ax.axis("off")
 
-ax.set_title("지난 365일 Contributions Heatmap")
-
-# 9) 최종 이미지 출력 (임베드 시 히트맵만 보이도록)
 st.pyplot(fig)
