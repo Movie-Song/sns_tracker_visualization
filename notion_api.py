@@ -76,4 +76,12 @@ def get_dataframe():
     print("📊 변환된 데이터프레임:", df)  # 데이터 출력
 
     df["Date"] = pd.to_datetime(df["Date"])
+
+    # ✅ 데이터 반환 전에 타입 확인
+    print("📌 `get_dataframe()`이 반환하는 타입:", type(df))
+
+    return df.set_index("Date").sort_index()
+
+
+    df["Date"] = pd.to_datetime(df["Date"])
     return df.set_index("Date").sort_index()
