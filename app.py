@@ -1,5 +1,5 @@
 import streamlit as st
-import pandas as pd  # ✅ pandas 가져오기
+import pandas as pd  # ✅ pandas 가져오기 (중요)
 import matplotlib.pyplot as plt
 import numpy as np
 from notion_api import get_dataframe  # 노션 API 모듈 불러오기
@@ -12,6 +12,21 @@ df = get_dataframe()
 
 # ✅ 데이터 타입 확인
 st.write("📊 데이터 타입:", type(df))
+
+# ✅ pandas 객체인지 확인
+if isinstance(df, pd.DataFrame):
+    st.write("✅ `df`는 pandas DataFrame입니다.")
+else:
+    st.error(f"🚨 `df`가 DataFrame이 아닙니다. 현재 타입: {type(df)}")
+
+# ✅ df가 비어 있으면 경고 메시지 출력
+if df is None:
+    st.error("🚨 `get_dataframe()`이 `None`을 반환했습니다. 확인이 필요합니다!")
+elif df.empty:
+    st.warning("⚠️ 데이터가 없습니다. 노션 API 응답을 확인하세요!")
+else:
+    st.write("📊 가져온 데이터:", df)
+
 
 if df is None:
     st.error("🚨 `get_dataframe()`이 `None`을 반환했습니다. 확인이 필요합니다!")
