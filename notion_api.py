@@ -64,6 +64,11 @@ def get_dataframe():
         return pd.DataFrame()  # 빈 데이터 반환
 
     date_counts = extract_dates(notion_data)
+    
+    if not date_counts:  # ✅ 데이터가 없으면 빈 DataFrame 반환
+        print("⚠️ 변환된 데이터가 없습니다!", date_counts)
+        return pd.DataFrame(columns=["Date", "Count"])
+
     df = pd.DataFrame(list(date_counts.items()), columns=["Date", "Count"])
     
     # ✅ 데이터 확인 출력 추가
