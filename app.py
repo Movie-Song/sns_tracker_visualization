@@ -5,33 +5,31 @@ import numpy as np
 from notion_api import get_dataframe
 
 st.title("Notion 데이터 깃허브 잔디 스타일 시각화")
-
 st.write("Hello, world!")
 
 # Notion 데이터를 DataFrame 형태로 가져옵니다.
 df = get_dataframe()
 
-# 데이터가 없을 경우 메시지를 출력하고 종료합니다.
+# 데이터가 없으면 에러 메시지를 출력하고 앱 실행을 중단합니다.
 if df.empty:
     st.error("데이터가 없습니다. Notion API 설정과 DATABASE_ID를 확인해 주세요.")
     st.stop()
 
-# 원본 데이터를 확인할 수 있도록 출력합니다.
+# 가져온 데이터 확인
 st.subheader("가져온 데이터")
 st.write(df)
 
-# 날짜별 데이터를 주차(Week)와 요일(Weekday)로 분리하여 히트맵에 사용할 pivot 테이블을 만듭니다.
-df["Weekday"] = df.index.weekday  # 0: 월요일, 6: 일요일
+# 날짜별 데이터를 주차와 요일로 분리합니다.
+df["Weekday"] = df.index.weekday         # 0: 월요일, 6: 일요일
 df["Week"] = df.index.isocalendar().week  # ISO 주 번호
 
+# 피벗 테이블 생성 (주차를 열, 요일을 행으로)
 pivot = df.pivot_table(values="Count", index="Weekday", columns="Week", fill_value=0)
-
-# 피벗 테이블 출력 (디버깅 용)
-st.subheader("피벗 테이블 (pivot)")
+st.subheader("피벗 테이블")
 st.write(pivot)
 
-# 히트맵 그리기 (figure 크기 조정)
-fig, ax = plt.subplots(figsize=(16, 6))  # 크기를 16x6으로 늘려봅니다.
+# 히트맵 생성 (시각화를 위해 Figure 크기를 조정)
+fig, ax = plt.subplots(figsize=(16, 6))
 heatmap = ax.pcolormesh(pivot, cmap="Greens", edgecolors="gray")
 plt.colorbar(heatmap, ax=ax)
 
