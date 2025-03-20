@@ -3,6 +3,7 @@ import requests
 import pandas as pd
 from dotenv import load_dotenv
 from collections import defaultdict
+from datetime import datetime, timedelta
 
 # 환경 변수 로드
 load_dotenv()
@@ -17,9 +18,23 @@ headers = {
 }
 
 def get_notion_data():
-    """ 노션 API에서 데이터 가져오기 """
+    """ 최근 1년 데이터만 가져오기 """
+    # 1년 전 날짜 계산
+    one_year_ago = (datetime.today() - timedelta(days=365)).strftime("%Y-%m-%d")
+
     url = f"https://api.notion.com/v1/databases/{DATABASE_ID}/query"
-    response = requests.post(url, headers=headers)
+
+    # ✅ 노션 API 필터 추가 (최근 1년 데이터만 가져오기)
+    payload = {
+        "filter": {
+            "property": "Date",
+            "date": {
+                "after": one_year_ago  # 1년 전 이후 데이터만 가져오기
+            }
+        }
+    }
+
+    response = requests.post(url, headers=headers, json=payload)
     return response.json()
 
 def extract_dates(data):
@@ -40,4 +55,3 @@ def get_dataframe():
     df = pd.DataFrame(list(date_counts.items()), columns=["Date", "Count"])
     df["Date"] = pd.to_datetime(df["Date"])
     return df.set_index("Date").sort_index()
-
