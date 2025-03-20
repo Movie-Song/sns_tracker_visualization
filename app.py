@@ -9,7 +9,7 @@ df = get_dataframe()
 # 데이터 가공
 df["Weekday"] = df.index.weekday  # 요일 (0: 월, 6: 일)
 df["Week"] = df.index.isocalendar().week  # 몇 번째 주인지
-pivot_table = df.pivot("Weekday", "Week", "Count").fillna(0)
+pivot_table = df.pivot_table(values="Count", index="Weekday", columns="Week", fill_value=0)
 
 # Streamlit UI
 st.title("노션 데이터 깃허브 잔디 스타일 시각화")
