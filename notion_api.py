@@ -3,7 +3,7 @@ import requests
 import pandas as pd
 from dotenv import load_dotenv
 from collections import defaultdict
-from datetime import datetime, timedelta
+from datetime import datetime
 
 # 환경 변수 로드
 load_dotenv()
@@ -36,21 +36,22 @@ def get_notion_data():
     return response.json()
 
 def extract_dates(data):
-    """ 날짜별 카운트 집계 """
+    """ 날짜별 카운트 집계 (YYYY-MM-DD 형식으로 변환) """
     date_counts = defaultdict(int)
 
     for item in data.get("results", []):
         properties = item.get("properties", {})
-
-        # ✅ Date 필드 확인
         date_property = properties.get("Date", {}).get("date", {})
-        print("📅 가져온 날짜 데이터:", date_property)  # 디버깅 출력
 
         if "start" in date_property:
-            date = date_property["start"]
-            date_counts[date] += 1
+            raw_date = date_property["start"]  # 기존 날짜 형식: "2024-09-04T11:00:00.000+09:00"
 
-    print("📊 최종 날짜별 데이터 카운트:", date_counts)  # 디버깅 출력
+            # ✅ 날짜에서 시간 제거 (YYYY-MM-DD 형식으로 변환)
+            formatted_date = datetime.fromisoformat(raw_date[:10]).strftime("%Y-%m-%d")
+
+            date_counts[formatted_date] += 1
+
+    print("📊 변환된 날짜별 데이터 카운트:", date_counts)  # 디버깅 출력
     return date_counts
 
 def get_dataframe():
