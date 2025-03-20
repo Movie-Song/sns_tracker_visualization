@@ -18,26 +18,22 @@ headers = {
 }
 
 def get_notion_data():
-    """ 최근 1년 데이터 가져오기 """
-    print("✅ get_notion_data() 실행됨")  # 함수 실행 확인
+    print("✅ get_notion_data() 실행됨")
+
     one_year_ago = (datetime.today() - timedelta(days=365)).strftime("%Y-%m-%d")
 
     url = f"https://api.notion.com/v1/databases/{DATABASE_ID}/query"
-
-    payload = {
-        "filter": {
-            "property": "Date",
-            "date": {
-                "after": one_year_ago
-            }
-        }
-    }
-
+    payload = {"filter": {"property": "Date", "date": {"after": one_year_ago}}}
+    
     response = requests.post(url, headers=headers, json=payload)
     data = response.json()
 
-    # ✅ API 응답 확인
+    # ✅ API 응답 직접 출력
     print("📌 Notion API 응답:", data)
+
+    if "results" not in data:
+        print("🚨 Notion API 응답에 `results` 키가 없음!", data)
+        return {}
 
     return data
 
