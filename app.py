@@ -3,8 +3,14 @@ import matplotlib.pyplot as plt
 import numpy as np
 from notion_api import get_dataframe  # 노션 API 모듈 불러오기
 
-# 데이터 가져오기
+# ✅ 데이터 가져오기
 df = get_dataframe()
+
+# ✅ 데이터가 비어 있으면 경고 메시지 출력
+if df.empty:
+    st.warning("⚠️ 데이터가 없습니다. 노션 API 응답을 확인하세요!")
+else:
+    st.write("📊 가져온 데이터:", df)
 
 # ✅ 데이터 확인
 st.write("📊 가져온 데이터:", df)
