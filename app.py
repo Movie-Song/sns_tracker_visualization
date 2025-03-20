@@ -26,6 +26,27 @@ df["Week"] = df.index.isocalendar().week  # ISO 주 번호
 
 pivot = df.pivot_table(values="Count", index="Weekday", columns="Week", fill_value=0)
 
+# 피벗 테이블 출력 (디버깅 용)
+st.subheader("피벗 테이블 (pivot)")
+st.write(pivot)
+
+# 히트맵 그리기 (figure 크기 조정)
+fig, ax = plt.subplots(figsize=(16, 6))  # 크기를 16x6으로 늘려봅니다.
+heatmap = ax.pcolormesh(pivot, cmap="Greens", edgecolors="gray")
+plt.colorbar(heatmap, ax=ax)
+
+# 축 레이블 설정
+ax.set_xticks(np.arange(len(pivot.columns)) + 0.5)
+ax.set_xticklabels(pivot.columns, rotation=90)
+ax.set_yticks(np.arange(7) + 0.5)
+ax.set_yticklabels(["월", "화", "수", "목", "금", "토", "일"])
+ax.set_xlabel("주차")
+ax.set_ylabel("요일")
+ax.set_title("Notion 데이터 Contributions Heatmap")
+
+st.pyplot(fig)
+
+
 # 히트맵을 생성합니다.
 fig, ax = plt.subplots(figsize=(12, 4))
 heatmap = ax.pcolormesh(pivot, cmap="Greens", edgecolors="gray")
