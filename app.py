@@ -1,56 +1,41 @@
 import streamlit as st
-import pandas as pd  # ✅ pandas 가져오기
+import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
-from notion_api import get_dataframe  # 노션 API 모듈 불러오기
+from notion_api import get_dataframe
 
-st.title("📊 노션 데이터 시각화")
+st.title("Notion 데이터 깃허브 잔디 스타일 시각화")
 
-# ✅ get_dataframe()이 실행되는지 확인
-st.write("✅ `get_dataframe()` 호출됨")
-
-# ✅ 데이터 가져오기
+# Notion 데이터를 DataFrame 형태로 가져옵니다.
 df = get_dataframe()
 
-# ✅ 강제 출력: `df` 값 직접 확인
-st.write("📌 `df`의 원본 값:", df)
-
-# ✅ `df`가 None인지 확인
-if df is None:
-    st.error("🚨 `df`가 `None`입니다. Notion API 응답을 확인하세요!")
-    st.stop()
-
-# ✅ `df`가 비어 있는지 확인
+# 데이터가 없을 경우 메시지를 출력하고 종료합니다.
 if df.empty:
-    st.warning("⚠️ 데이터가 없습니다. 노션 API 응답을 확인하세요!")
+    st.error("데이터가 없습니다. Notion API 설정과 DATABASE_ID를 확인해 주세요.")
     st.stop()
 
-# ✅ `df`가 pandas DataFrame인지 체크
-if not isinstance(df, pd.DataFrame):
-    st.error(f"🚨 `df`의 타입이 이상합니다! 현재 타입: {type(df)}")
-    st.stop()
+# 원본 데이터를 확인할 수 있도록 출력합니다.
+st.subheader("가져온 데이터")
+st.write(df)
 
-# ✅ index 변환이 가능한지 확인
-st.write("📌 `df.index` 값:", df.index)
+# 날짜별 데이터를 주차(Week)와 요일(Weekday)로 분리하여 히트맵에 사용할 pivot 테이블을 만듭니다.
+df["Weekday"] = df.index.weekday  # 0: 월요일, 6: 일요일
+df["Week"] = df.index.isocalendar().week  # ISO 주 번호
 
-try:
-    df["Weekday"] = df.index.weekday  # 요일 (0=월요일, 6=일요일)
-    df["Week"] = df.index.isocalendar().week
-    st.success("✅ 요일 및 주차 데이터 생성 완료")
-except Exception as e:
-    st.error(f"🚨 `df.index.weekday` 변환 중 오류 발생: {e}")
-    st.stop()
+pivot = df.pivot_table(values="Count", index="Weekday", columns="Week", fill_value=0)
 
-# ✅ 시각화 코드 유지
+# 히트맵을 생성합니다.
 fig, ax = plt.subplots(figsize=(12, 4))
-pivot_table = df.pivot_table(values="Count", index="Weekday", columns="Week", fill_value=0)
-heatmap = plt.pcolormesh(pivot_table, cmap="Greens", edgecolors="gray")
-plt.colorbar(heatmap)
-ax.set_xticks(np.arange(len(pivot_table.columns)) + 0.5)
-ax.set_xticklabels(pivot_table.columns, rotation=90)
+heatmap = ax.pcolormesh(pivot, cmap="Greens", edgecolors="gray")
+plt.colorbar(heatmap, ax=ax)
+
+# 축 레이블 설정
+ax.set_xticks(np.arange(len(pivot.columns)) + 0.5)
+ax.set_xticklabels(pivot.columns, rotation=90)
 ax.set_yticks(np.arange(7) + 0.5)
 ax.set_yticklabels(["월", "화", "수", "목", "금", "토", "일"])
-plt.xlabel("주차")
-plt.ylabel("요일")
-plt.title("노션 데이터 깃허브 잔디 스타일 시각화")
+ax.set_xlabel("주차")
+ax.set_ylabel("요일")
+ax.set_title("Notion 데이터 Contributions Heatmap")
+
 st.pyplot(fig)
