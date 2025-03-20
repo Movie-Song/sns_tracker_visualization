@@ -45,20 +45,3 @@ ax.set_ylabel("요일")
 ax.set_title("Notion 데이터 Contributions Heatmap")
 
 st.pyplot(fig)
-
-
-# 히트맵을 생성합니다.
-fig, ax = plt.subplots(figsize=(12, 4))
-heatmap = ax.pcolormesh(pivot, cmap="Greens", edgecolors="gray")
-plt.colorbar(heatmap, ax=ax)
-
-# 축 레이블 설정
-ax.set_xticks(np.arange(len(pivot.columns)) + 0.5)
-ax.set_xticklabels(pivot.columns, rotation=90)
-ax.set_yticks(np.arange(7) + 0.5)
-ax.set_yticklabels(["월", "화", "수", "목", "금", "토", "일"])
-ax.set_xlabel("주차")
-ax.set_ylabel("요일")
-ax.set_title("Notion 데이터 Contributions Heatmap")
-
-st.pyplot(fig)
