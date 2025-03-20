@@ -3,7 +3,7 @@ import requests
 import pandas as pd
 from dotenv import load_dotenv
 from collections import defaultdict
-from datetime import datetime
+from datetime import datetime, timedelta
 
 # 환경 변수 로드
 load_dotenv()
