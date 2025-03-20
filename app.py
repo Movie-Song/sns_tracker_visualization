@@ -9,6 +9,10 @@ df = get_dataframe()
 # ✅ 데이터 확인
 st.write("📊 가져온 데이터:", df)
 
+# ✅ 데이터 정보 출력 (디버깅용)
+st.write("📊 데이터프레임 정보:", df.info())
+st.write("📊 가져온 데이터:", df)
+
 # ✅ 날짜 변환 (주차 & 요일 추가)
 df["Weekday"] = df.index.weekday  # 요일 (0=월요일, 6=일요일)
 df["Week"] = df.index.isocalendar().week  # 몇 번째 주인지
