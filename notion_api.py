@@ -65,5 +65,9 @@ def get_dataframe():
 
     date_counts = extract_dates(notion_data)
     df = pd.DataFrame(list(date_counts.items()), columns=["Date", "Count"])
+    
+    # ✅ 데이터 확인 출력 추가
+    print("📊 변환된 데이터프레임:", df)
+
     df["Date"] = pd.to_datetime(df["Date"])
     return df.set_index("Date").sort_index()
