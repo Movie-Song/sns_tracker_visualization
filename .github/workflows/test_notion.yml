@@ -1,0 +1,30 @@
+name: Test Notion API
+
+on:
+  workflow_dispatch:  # 수동 실행 가능하도록 설정
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 저장소 체크아웃
+        uses: actions/checkout@v3
+
+      - name: Python 설정
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.9"
+
+      - name: 필요 패키지 설치
+        run: pip install -r requirements.txt
+
+      - name: 환경 변수 설정
+        env:
+          NOTION_API_KEY: ${{ secrets.NOTION_API_KEY }}
+          DATABASE_ID: ${{ secrets.DATABASE_ID }}
+        run: |
+          echo "NOTION_API_KEY=${{ secrets.NOTION_API_KEY }}" >> $GITHUB_ENV
+          echo "DATABASE_ID=${{ secrets.DATABASE_ID }}" >> $GITHUB_ENV
+
+      - name: Notion API 테스트 실행
+        run: python test_notion.py
