@@ -19,6 +19,7 @@ headers = {
 
 def get_notion_data():
     """ 최근 1년 데이터 가져오기 """
+    print("✅ get_notion_data() 실행됨")  # 함수 실행 확인
     one_year_ago = (datetime.today() - timedelta(days=365)).strftime("%Y-%m-%d")
 
     url = f"https://api.notion.com/v1/databases/{DATABASE_ID}/query"
@@ -36,19 +37,19 @@ def get_notion_data():
     return response.json()
 
 def extract_dates(data):
-    """ 날짜별 카운트 집계 (YYYY-MM-DD 형식으로 변환) """
+    """ 날짜별 카운트 집계 """
     date_counts = defaultdict(int)
 
     for item in data.get("results", []):
         properties = item.get("properties", {})
+
+        # ✅ Date 필드 확인
         date_property = properties.get("Date", {}).get("date", {})
+        print("📅 가져온 날짜 데이터:", date_property)  # 디버깅 출력
 
         if "start" in date_property:
-            raw_date = date_property["start"]  # 기존 날짜 형식: "2024-09-04T11:00:00.000+09:00"
-
-            # ✅ 날짜에서 시간 제거 (YYYY-MM-DD 형식으로 변환)
+            raw_date = date_property["start"]
             formatted_date = datetime.fromisoformat(raw_date[:10]).strftime("%Y-%m-%d")
-
             date_counts[formatted_date] += 1
 
     print("📊 변환된 날짜별 데이터 카운트:", date_counts)  # 디버깅 출력
@@ -56,23 +57,23 @@ def extract_dates(data):
 
 def get_dataframe():
     """ 데이터프레임 변환 """
+    print("✅ get_dataframe() 실행됨")  # 함수 실행 확인
+
     notion_data = get_notion_data()
 
-    # ✅ API 응답이 정상인지 확인
     if "results" not in notion_data:
         print("⚠️ API에서 데이터를 가져오지 못함!", notion_data)
         return pd.DataFrame()  # 빈 데이터 반환
 
     date_counts = extract_dates(notion_data)
     
-    if not date_counts:  # ✅ 데이터가 없으면 빈 DataFrame 반환
+    if not date_counts:
         print("⚠️ 변환된 데이터가 없습니다!", date_counts)
         return pd.DataFrame(columns=["Date", "Count"])
 
     df = pd.DataFrame(list(date_counts.items()), columns=["Date", "Count"])
     
-    # ✅ 데이터 확인 출력 추가
-    print("📊 변환된 데이터프레임:", df)
+    print("📊 변환된 데이터프레임:", df)  # 데이터 출력
 
     df["Date"] = pd.to_datetime(df["Date"])
     return df.set_index("Date").sort_index()
