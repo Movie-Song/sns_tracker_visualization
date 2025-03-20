@@ -28,7 +28,7 @@ for date_i, row in df_user.iterrows():
         df_calendar.loc[date_i, "Count"] = row["Count"]
 
 # 요일(Weekday)와 주(WeekIndex) 계산
-df_calendar["Weekday"] = df_calendar.index.weekday  # 0: 월요일, 6: 일요일
+df_calendar["Weekday"] = df_calendar.index.weekday           # 0: 월요일, 6: 일요일
 df_calendar["WeekIndex"] = ((df_calendar.index - start_date).days // 7).astype(int)
 
 # 피벗 테이블 생성 (행=요일, 열=주차, 값=Count)
@@ -36,20 +36,17 @@ pivot = df_calendar.pivot(index="Weekday", columns="WeekIndex", values="Count")
 # Count 값이 5보다 크면 5로 클리핑
 pivot = pivot.clip(upper=5)
 
-# 사용자 지정 색상 설정 (0부터 5까지)
-colors = ["white", "#FCFEB3", "#C6EA74", "#68CB57", "#00893E", "#006B31"]
+# 사용자 지정 색상 설정 (0~5)
+# 0: #F2F2F2 (옅은 회색), 1: #FCFEB3, 2: #C6EA74, 3: #68CB57, 4: #00893E, 5: #006B31
+colors = ["#F2F2F2", "#FCFEB3", "#C6EA74", "#68CB57", "#00893E", "#006B31"]
 cmap = mcolors.ListedColormap(colors)
-# 경계값: 0, 1, 2, 3, 4, 5, 6 (즉, 0~0.999는 white, 1~1.999는 #FCFEB3, ...)
+# 경계값: 0,1,2,3,4,5,6 → 각 구간에 맞게 색상 적용
 boundaries = [0, 1, 2, 3, 4, 5, 6]
 norm = mcolors.BoundaryNorm(boundaries, ncolors=cmap.N)
 
-# 히트맵 그리기 (필요한 요소만 남김)
+# 히트맵 그리기 (불필요한 축, 눈금, 범례, 제목 제거)
 fig, ax = plt.subplots(figsize=(16, 3))
 ax.pcolormesh(pivot, cmap=cmap, norm=norm, edgecolors="white")
-
-# 축, 눈금, 범례, 제목 제거
-ax.set_xticks([])
-ax.set_yticks([])
-ax.axis("off")
+ax.axis("off")  # 축 및 눈금 제거
 
 st.pyplot(fig)
